@@ -5,7 +5,9 @@ from bagpy import bagreader
 import pandas as pd
 from math import sin, cos, pi, tan, radians
 import numpy as np
+import matplotlib.pyplot as plt
 import tkinter as tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog as fd
 
 
@@ -32,34 +34,71 @@ angular_encoder_data = bag.message_by_topic(angular_encoder_topic)
 angular_encoder_data = pd.read_csv(angular_encoder_data)
 angular_encoder_data = angular_encoder_data["data"].to_numpy()
 
-print(linear_encoder_data)
+timestamps = bag.message_by_topic(linear_encoder_topic)
+timestamps = pd.read_csv(timestamps)
+timestamps = timestamps["Time"].to_numpy()
+
 
 encoder_type = "" #VESC (erpm), DIGITAL ENCODER (ticks)
-wheel_base_dist = 0
+wheelbase = 0.274
 
 number_poles = 2
 motor_reduction = 4
 wheel_radius = 0.043 #Meters
 rpm_to_ms = (2*pi*wheel_radius)/60 #Convert rpm to meters per second
-vx = (linear_encoder_data * rpm_to_ms)/ (number_poles * motor_reduction)
+speed_rpm = (linear_encoder_data * rpm_to_ms)/ (number_poles * motor_reduction)
+
+servo_angle_rad = np.radians(54.0 * angular_encoder_data - 27.25)  # rads
+
+x = 0
+y = 0
+th = 0
+
+pos_x = []
+pos_y = []
+pos_th = []
+
+for i in range(len(speed_rpm)):
+    vx = speed_rpm[i]
+    vy = 0
+    servo_angle = servo_angle_rad[i]
+    vth = vx * tan(servo_angle) / wheelbase #rad/s
+
+    if i > 1:
+        current_time = timestamps[i-1]
+        last_time = timestamps[i]
+
+        dt = (current_time - last_time)
+        delta_x = (vx * cos(th) - vy * sin(th)) * dt
+        delta_y = (vx * sin(th) + vy * cos(th)) * dt
+        delta_th = vth * dt
+
+        x += delta_x
+        y += delta_y
+        th += delta_th
+
+        pos_x.append(x)
+        pos_y.append(y)
+        pos_th.append(th)
 
 
 
-'''
-#######################################################
-# Diff. Odometry:
-#######################################################
-right_encoder_topic = ""
-left_encoder_topic = ""
-encoder_type = "" #VESC (erpm), DIGITAL ENCODER (ticks)
-wheel_base_dist = 0
 
-ticks_per_rotation = 0
-erpm_to_rpm = 0
+#'''
+root= tk.Tk()
+
+#greeting = tk.Label(text="Hello, Tkinter")
+#greeting.pack()
+
+figure = plt.Figure(figsize=(6,5), dpi=100)
+ax = figure.add_subplot(111)
+chart_type = FigureCanvasTkAgg(figure, root)
+chart_type.get_tk_widget().pack()
+ax.scatter(pos_x, pos_y)
+ax.set_title('The Title for your chart')
 
 
-window = tk.Tk()
-greeting = tk.Label(text="Hello, Tkinter")
-greeting.pack()
-window.mainloop()
-'''
+#figure1
+#plt.show()
+root.mainloop()
+#'''
