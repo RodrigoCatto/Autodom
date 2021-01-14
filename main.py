@@ -58,7 +58,13 @@ pos_x = []
 pos_y = []
 pos_th = []
 
-for i in range(len(speed_rpm)):
+slider_in = 0.0
+slider_out = 0.3
+
+start = int(len(speed_rpm)*slider_in)
+stop = int(len(speed_rpm)*slider_out)
+
+for i in range(start,stop):
     vx = speed_rpm[i]
     vy = 0
     servo_angle = servo_angle_rad[i]
@@ -87,18 +93,23 @@ for i in range(len(speed_rpm)):
 #'''
 root= tk.Tk()
 
-#greeting = tk.Label(text="Hello, Tkinter")
-#greeting.pack()
+l = tk.Label(root, bg='white', fg='black', width=20, text='empty')
+l.pack()
+
+def print_selection(v):
+    l.config(text='you have selected ' + v)
+
+
+s = tk.Scale(root, label='End Point in %', from_=0, to=100, orient=tk.HORIZONTAL, length=200, showvalue=0, tickinterval=10,
+             resolution=5, command=print_selection)
+s.pack()
 
 figure = plt.Figure(figsize=(6,5), dpi=100)
 ax = figure.add_subplot(111)
 chart_type = FigureCanvasTkAgg(figure, root)
 chart_type.get_tk_widget().pack()
 ax.scatter(pos_x, pos_y)
-ax.set_title('The Title for your chart')
+ax.set_title('Odometry for X and Y')
 
-
-#figure1
-#plt.show()
 root.mainloop()
 #'''
