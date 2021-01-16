@@ -10,6 +10,22 @@ import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog as fd
 
+def generate_semicircle(center_x, center_y, radius, stepsize=0.1):
+    """
+    generates coordinates for a semicircle, centered at center_x, center_y
+    """
+
+    x = np.arange(center_x, center_x+radius+stepsize, stepsize)
+    y = np.sqrt(radius**2 - x**2)
+
+    # since each x value has two corresponding y-values, duplicate x-axis.
+    # [::-1] is required to have the correct order of elements for plt.plot.
+    x = np.concatenate([x,x[::-1]])
+
+    # concatenate y and flipped y.
+    y = np.concatenate([y,-y[::-1]])
+
+    return x, y + center_y
 
 #######################################################
 # Open Bag file
@@ -41,12 +57,16 @@ timestamps = timestamps["Time"].to_numpy()
 
 encoder_type = "" #VESC (erpm), DIGITAL ENCODER (ticks)
 wheelbase = 0.274
-
+UMBmark_lenght = 3
 number_poles = 2
 motor_reduction = 4
 wheel_radius = 0.043 #Meters
 rpm_to_ms = (2*pi*wheel_radius)/60 #Convert rpm to meters per second
 speed_rpm = (linear_encoder_data * rpm_to_ms)/ (number_poles * motor_reduction)
+
+
+
+#speed_rpm_val = linear_encoder_data*120*rpm_to_ms/1000
 
 servo_angle_rad = np.radians(54.0 * angular_encoder_data - 27.25)  # rads
 
@@ -87,9 +107,6 @@ for i in range(start,stop):
         pos_y.append(y)
         pos_th.append(th)
 
-
-
-
 #'''
 root= tk.Tk()
 
@@ -104,12 +121,19 @@ s = tk.Scale(root, label='End Point in %', from_=0, to=100, orient=tk.HORIZONTAL
              resolution=5, command=print_selection)
 s.pack()
 
+generate_semicircle(0, UMBmark_lenght, UMBmark_lenght/2, stepsize=0.1)
+generate_semicircle(-UMBmark_lenght, UMBmark_lenght, UMBmark_lenght/2, stepsize=0.1)
+
 figure = plt.Figure(figsize=(6,5), dpi=100)
 ax = figure.add_subplot(111)
 chart_type = FigureCanvasTkAgg(figure, root)
 chart_type.get_tk_widget().pack()
 ax.scatter(pos_x, pos_y)
-ax.set_title('Odometry for X and Y')
+ax.set_title('Robot Position in X and Y')
+ax.set_ylabel('Y [Meters]')
+ax.set_xlabel('X [Meters]')
+
+
 
 root.mainloop()
 #'''
