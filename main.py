@@ -11,22 +11,16 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog as fd
 
 def generate_semicircle(center_x, center_y, radius, stepsize=0.1):
-    """
-    generates coordinates for a semicircle, centered at center_x, center_y
-    """
 
-    x = np.arange(center_x, center_x+radius+stepsize, stepsize)
-    y = np.sqrt(radius**2 - x**2)
+    theta = np.linspace(0, np.pi, 30)
 
-    # since each x value has two corresponding y-values, duplicate x-axis.
-    # [::-1] is required to have the correct order of elements for plt.plot.
-    x = np.concatenate([x,x[::-1]])
+    x = np.cos(theta)
+    y = np.sin(theta)
 
-    # concatenate y and flipped y.
-    y = np.concatenate([y,-y[::-1]])
+    x *= radius
+    y *= radius
 
-    return x, y + center_y
-
+    return y+center_x,  x + center_y
 #######################################################
 # Open Bag file
 #######################################################
@@ -121,18 +115,21 @@ s = tk.Scale(root, label='End Point in %', from_=0, to=100, orient=tk.HORIZONTAL
              resolution=5, command=print_selection)
 s.pack()
 
-generate_semicircle(0, UMBmark_lenght, UMBmark_lenght/2, stepsize=0.1)
-generate_semicircle(-UMBmark_lenght, UMBmark_lenght, UMBmark_lenght/2, stepsize=0.1)
+# Generate real path
+semi_circle_right_x, semi_circle_right_y = generate_semicircle(0, UMBmark_lenght/2, UMBmark_lenght/2, stepsize=0.01)
+semi_circle_left_x, semi_circle_left_y = generate_semicircle(-UMBmark_lenght, UMBmark_lenght/2, -UMBmark_lenght/2, stepsize=0.01)
+top_line_x, top_line_y = [0, -UMBmark_lenght], [0, 0] # Top line
+bottom_line_x, bottom_line_y = [0, -UMBmark_lenght], [UMBmark_lenght, UMBmark_lenght] # Bottom line
 
 figure = plt.Figure(figsize=(6,5), dpi=100)
 ax = figure.add_subplot(111)
 chart_type = FigureCanvasTkAgg(figure, root)
 chart_type.get_tk_widget().pack()
+ax.plot(semi_circle_right_x, semi_circle_right_y,semi_circle_left_x, semi_circle_left_y, top_line_x, top_line_y, bottom_line_x, bottom_line_y)
 ax.scatter(pos_x, pos_y)
 ax.set_title('Robot Position in X and Y')
 ax.set_ylabel('Y [Meters]')
 ax.set_xlabel('X [Meters]')
-
 
 
 root.mainloop()
