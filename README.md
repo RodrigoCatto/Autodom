@@ -4,6 +4,7 @@ This is a GUI tool to help roboticists in creating and calibrating the odometry 
 
 # Milestones
 * Import rosbag :white_check_mark:
+* Choose the plattaform (Ackermann | Diff.) :black_square_button:
 * Odometry for Car-Like robots
   * Supported Inputs: VESC | Incremental Encoder :black_square_button:
 * Odometry for Diff. Drive robots :black_square_button:
