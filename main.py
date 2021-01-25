@@ -7,7 +7,7 @@ import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog
 from helper_functions import generate_semicircle, read_akermann_topics, odometry
-
+from math import atan2, pi, sin
 
 #######################################################
 # Open Bag file
@@ -34,13 +34,23 @@ wheel_radius = 0.043 #Meters
 slider_in = 0.0
 slider_out = 0.3
 
-speed_rpm, servo_angle_rad, timestamps = read_akermann_topics(bag, motor_topic, servo_topic, wheel_radius, motor_reduction, number_poles)
-pos_x, pos_y, possible_curve_points_x, possible_curve_points_y = odometry(slider_in, slider_out, speed_rpm, servo_angle_rad, timestamps, wheelbase)
+speed_rpm, servo_angle_rad, timestamps, length = read_akermann_topics(bag, motor_topic, servo_topic, wheel_radius, motor_reduction, number_poles)
+pos_x, pos_y, possible_curve_points_x, possible_curve_points_y, diff_th = odometry(slider_in, slider_out, speed_rpm, servo_angle_rad, timestamps, wheelbase)
 
-#plt.plot(timestamps[start:stop-2], diff_th)
-#plt.show()
+start = int(len(speed_rpm) * slider_in)
+stop = int(len(speed_rpm) * slider_out)
+plt.plot(timestamps[start:stop-2], diff_th)
+plt.show()
 
+alpha = atan2(possible_curve_points_y[1]-1.5, possible_curve_points_x[1]-(-3))
+nominal_wheelbase = wheelbase*pi - wheelbase*alpha/ pi
 
+beta = atan2(possible_curve_points_y[0], possible_curve_points_x[0])
+R = 1.5/sin(beta)
+drl = R+beta/ R-beta
+
+print("Nominal wheelbase: " + str(nominal_wheelbase))
+print("Dr/Dl: " + str(drl))
 
 #######################################################
 # User Interface:

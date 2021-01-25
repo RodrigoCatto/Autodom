@@ -1,5 +1,5 @@
 import pandas as pd
-from math import sin, cos, pi, tan, radians
+from math import sin, cos, pi, tan, radians, degrees, atan, atan2, sqrt
 import numpy as np
 
 #######################################################
@@ -47,7 +47,9 @@ def read_akermann_topics(bag, motor_topic, servo_topic, wheel_radius, motor_redu
     speed_rpm = (linear_encoder_data * rpm_to_ms) / (number_poles * motor_reduction)
     servo_angle_rad = np.radians(54.0 * angular_encoder_data - 27.25)  # rads
 
-    return speed_rpm, servo_angle_rad, timestamps
+    length = len(speed_rpm)
+
+    return speed_rpm, servo_angle_rad, timestamps, length
 
 
 #######################################################
@@ -57,6 +59,11 @@ def odometry(slider_in, slider_out, speed_rpm, servo_angle_rad, timestamps, whee
     x = 0
     y = 0
     th = 0
+    distance  = 0
+    x_old = 0
+    y_old = 0
+    index_in = 0
+    index_out = 0
 
     pos_x = []
     pos_y = []
@@ -71,6 +78,7 @@ def odometry(slider_in, slider_out, speed_rpm, servo_angle_rad, timestamps, whee
     counting = False
 
     for i in range(start,stop):
+
         vx = speed_rpm[i]
         vy = 0
         servo_angle = servo_angle_rad[i]
@@ -93,13 +101,21 @@ def odometry(slider_in, slider_out, speed_rpm, servo_angle_rad, timestamps, whee
             pos_y.append(y)
             pos_th.append(th)
 
-            diff_th.append(vth)
+            distance += sqrt(((x - x_old)**2 + (y - y_old)**2))
+            diff_th.append(distance)
+            x_old = x
+            y_old = y
 
-            if vth > 0.3:
+            dist = [3, pi*1.5+3, pi*1.5+6, 2*pi*1.5+6, 1000]
+            if distance >= dist[index_in]:
                 if not counting:
                     possible_curve_points_x.append(x)
                     possible_curve_points_y.append(y)
                     counting = True
-            if vth <= 0.3:
+                    index_in+=1
+
+            if distance >= dist[index_out]:
                 counting = False
-    return pos_x, pos_y, possible_curve_points_x, possible_curve_points_y
+                index_out += 1
+
+    return pos_x, pos_y, possible_curve_points_x, possible_curve_points_y, diff_th
