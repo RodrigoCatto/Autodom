@@ -1,14 +1,10 @@
-import sys
-import matplotlib
-matplotlib.use('QT5Agg')
-from bagpy import bagreader
-from PyQt5.QtWidgets import QFileDialog
-from PyQt5 import QtCore, QtWidgets, uic
-from helper_functions import generate_semicircle, read_akermann_topics, odometry
-import matplotlib.pylab as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.figure import Figure
+from helper_functions import generate_semicircle, read_akermann_topics, odometry
+from PyQt5.QtWidgets import QFileDialog
+import matplotlib.patches as mpatches
+from PyQt5 import QtWidgets, uic
+from bagpy import bagreader
+import sys
 
 
 
@@ -16,12 +12,10 @@ class MyWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MyWindow, self).__init__()
         uic.loadUi('autodom.ui', self)
+        self.setWindowTitle("Autodom Tool")
         self.BagButton.clicked.connect(self.showDialog)
         self.AutoButton.clicked.connect(self.autodom)
-        self.figure = Figure()
-        self.canvas = FigureCanvas(self.figure)
-        self.canvas.setGeometry(200, 200, 300, 300)
-        self.toolbar = NavigationToolbar(self.canvas, self)
+        self.addToolBar(NavigationToolbar(self.MplWidget.canvas, self))
 
 
     def showDialog(self, MainWindow):
@@ -36,6 +30,7 @@ class MyWindow(QtWidgets.QMainWindow):
             for topic in topics_list:
                 self.comboBox_topic_1.addItem(topic)
                 self.comboBox_topic_2.addItem(topic)
+
 
     def autodom(self):
         wheelbase = 0.274
@@ -64,10 +59,20 @@ class MyWindow(QtWidgets.QMainWindow):
         top_line_x, top_line_y = [0, -UMBmark_length], [0, 0]  # Top line
         bottom_line_x, bottom_line_y = [0, -UMBmark_length], [UMBmark_length, UMBmark_length]  # Bottom line
 
-        ax = self.figure.add_subplot(111)
-        ax.clear()
-        ax.plot(semi_circle_right_x, semi_circle_right_y,'g', semi_circle_left_x, semi_circle_left_y,'g',  top_line_x, top_line_y, 'g', bottom_line_x, bottom_line_y, 'g')
-        self.canvas.draw()
+        self.MplWidget.canvas.axes.clear()
+        self.MplWidget.canvas.axes.plot(semi_circle_right_x, semi_circle_right_y, 'g', semi_circle_left_x, semi_circle_left_y, 'g', top_line_x,
+                top_line_y, 'g', bottom_line_x, bottom_line_y, 'g')
+        self.MplWidget.canvas.axes.plot(pos_x, pos_y, 'b')
+        self.MplWidget.canvas.axes.scatter(possible_curve_points_x, possible_curve_points_y)
+        self.MplWidget.canvas.axes.set_title('Robot Position in X and Y')
+        self.MplWidget.canvas.axes.set_ylabel('Y [Meters]')
+        self.MplWidget.canvas.axes.set_xlabel('X [Meters]')
+        red_patch = mpatches.Patch(color='green', label='Real Path')
+        blue_patch = mpatches.Patch(color='blue', label='Sensor Data')
+        self.MplWidget.canvas.axes.legend(handles=[red_patch, blue_patch])
+        self.MplWidget.canvas.draw()
+
+
 
 
 if __name__ == '__main__':
