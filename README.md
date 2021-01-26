@@ -2,6 +2,13 @@
 
 This is a GUI tool to help roboticists in creating and calibrating the odometry for robots using a simple and intuitive interface.
 
+# Installing
+
+```
+pip install PyQt5
+pip install matplotlib
+```
+
 # Milestones
 * Import rosbag :white_check_mark:
 * Choose the plattaform (Ackermann | Diff.) :white_check_mark:
