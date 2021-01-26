@@ -7,6 +7,9 @@ This is a GUI tool to help roboticists in creating and calibrating the odometry 
 ```
 pip install PyQt5
 pip install matplotlib
+pip install bagpy
+pip install numpy
+pip intall pandas
 ```
 
 # Milestones
