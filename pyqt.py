@@ -12,27 +12,43 @@ class MyWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MyWindow, self).__init__()
         uic.loadUi('autodom.ui', self)
+        self.fileName = None
         self.setWindowTitle("Autodom Tool")
         self.BagButton.clicked.connect(self.showDialog)
         self.AutoButton.clicked.connect(self.autodom)
         self.addToolBar(NavigationToolbar(self.MplWidget.canvas, self))
+        self.MplWidget.canvas.axes.set_title('Robot Position in X and Y')
+        self.MplWidget.canvas.axes.set_ylabel('Y [Meters]')
+        self.MplWidget.canvas.axes.set_xlabel('X [Meters]')
+        self.SliderIn.valueChanged.connect(self.value_changed)
+        self.SliderOut.valueChanged.connect(self.value_changed)
+        self.labelSliderIn.setText("t_begin: 0%")
+        self.labelSliderOut.setText("t_end: 100%")
 
 
     def showDialog(self, MainWindow):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         self.fileName, _ = QFileDialog.getOpenFileName(None, "QFileDialog.getOpenFileName()", "",
-                                                  "All Files (*);;Python Files (*.py)", options=options)
+                                                  "Rosbag Files (*.bag)", options=options)
         if self.fileName:
-            print(self.fileName)
+            self.statusbar.showMessage("File loaded: " + self.fileName)
             self.bag = bagreader(self.fileName)
             topics_list = self.bag.topic_table["Topics"].values.tolist()
             for topic in topics_list:
                 self.comboBox_topic_1.addItem(topic)
                 self.comboBox_topic_2.addItem(topic)
 
+    def value_changed(self):
+        self.labelSliderIn.setText("t_begin: " + str(100 - float(self.SliderIn.value())) + "%")
+        self.labelSliderOut.setText("t_end: " + str(float(self.SliderOut.value())) + "%")
 
     def autodom(self):
+
+        if not self.fileName:
+            self.statusbar.showMessage("Select rosbag file first")
+            return
+
         wheelbase = 0.274
         UMBmark_length = 3
         number_poles = 2
@@ -42,8 +58,8 @@ class MyWindow(QtWidgets.QMainWindow):
         topic_1 = self.comboBox_topic_1.currentText()
         topic_2 = self.comboBox_topic_2.currentText()
 
-        slider_in = 0.0
-        slider_out = 0.3
+        slider_in = 1 - float(self.SliderIn.value())/100 #0.0
+        slider_out = float(self.SliderOut.value())/100 #0.3
 
         speed_rpm, servo_angle_rad, timestamps, length = read_akermann_topics(self.bag, topic_1, topic_2,
                                                                               wheel_radius, motor_reduction,
@@ -56,6 +72,7 @@ class MyWindow(QtWidgets.QMainWindow):
         semi_circle_right_x, semi_circle_right_y = generate_semicircle(0, UMBmark_length / 2, UMBmark_length / 2)
         semi_circle_left_x, semi_circle_left_y = generate_semicircle(-UMBmark_length, UMBmark_length / 2,
                                                                      -UMBmark_length / 2)
+
         top_line_x, top_line_y = [0, -UMBmark_length], [0, 0]  # Top line
         bottom_line_x, bottom_line_y = [0, -UMBmark_length], [UMBmark_length, UMBmark_length]  # Bottom line
 
@@ -64,9 +81,6 @@ class MyWindow(QtWidgets.QMainWindow):
                 top_line_y, 'g', bottom_line_x, bottom_line_y, 'g')
         self.MplWidget.canvas.axes.plot(pos_x, pos_y, 'b')
         self.MplWidget.canvas.axes.scatter(possible_curve_points_x, possible_curve_points_y)
-        self.MplWidget.canvas.axes.set_title('Robot Position in X and Y')
-        self.MplWidget.canvas.axes.set_ylabel('Y [Meters]')
-        self.MplWidget.canvas.axes.set_xlabel('X [Meters]')
         red_patch = mpatches.Patch(color='green', label='Real Path')
         blue_patch = mpatches.Patch(color='blue', label='Sensor Data')
         self.MplWidget.canvas.axes.legend(handles=[red_patch, blue_patch])
