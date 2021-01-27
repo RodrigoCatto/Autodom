@@ -14,9 +14,9 @@ pip intall pandas
 
 # Files
 
-* Pyqt.py This is the main code
-* helper_functions.py This is where all functions are
-* mplwidget.py This is the class for the matplotlib widget
+* **Pyqt.py** This is the main code
+* **helper_functions.py** This is where all functions are
+* **mplwidget.py** This is the class for the matplotlib widget
 
 # Milestones
 * Import rosbag :white_check_mark:
