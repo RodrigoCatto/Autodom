@@ -25,7 +25,8 @@ pip intall pandas
 * Choose the topics :white_check_mark:
 * Trim rosbag time :white_check_mark:
 * Odometry for Car-Like robots
-  * Supported Inputs: VESC | Incremental Encoder :black_square_button:
+  * Supported Inputs: VESC :white_check_mark:
+  * Incremental Encoder :black_square_button:
 * Odometry for Diff. Drive robots :black_square_button:
   * Supported Inputs: Incremental Encontrei :black_square_button:
 * Odometry visualization :white_check_mark:
