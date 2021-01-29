@@ -28,6 +28,6 @@ pip intall pandas
   * Supported Inputs: VESC :white_check_mark:
   * Incremental Encoder :black_square_button:
 * Odometry for Diff. Drive robots :black_square_button:
-  * Supported Inputs: Incremental Encontrei :black_square_button:
+  * Supported Inputs: Incremental Enconder :black_square_button:
 * Odometry visualization :white_check_mark:
 * Odometry calibration :black_square_button:
