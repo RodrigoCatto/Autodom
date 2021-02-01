@@ -55,7 +55,7 @@ def read_akermann_topics(bag, motor_topic, servo_topic, wheel_radius, motor_redu
 #######################################################
 # Calculate Odometry:
 #######################################################
-def odometry(slider_in, slider_out, speed_rpm, servo_angle_rad, timestamps, wheelbase):
+def odometry(slider_in, slider_out, speed_rpm, servo_angle_rad, timestamps, wheelbase, dr_dl = 1.0):
     x = 0
     y = 0
     th = 0
@@ -82,7 +82,7 @@ def odometry(slider_in, slider_out, speed_rpm, servo_angle_rad, timestamps, whee
         vx = speed_rpm[i]
         vy = 0
         servo_angle = servo_angle_rad[i]
-        vth = vx * tan(servo_angle) / wheelbase #rad/s
+        vth = vx * tan(servo_angle * dr_dl) / wheelbase #rad/s
 
         if i > 1:
             current_time = timestamps[i-1]

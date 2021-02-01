@@ -16,6 +16,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Autodom Tool")
         self.BagButton.clicked.connect(self.showDialog)
         self.AutoButton.clicked.connect(self.autodom)
+        self.CalibrateButton.clicked.connect(self.calibrate)
         self.addToolBar(NavigationToolbar(self.MplWidget.canvas, self))
         self.MplWidget.canvas.axes.set_title('Robot Position in X and Y')
         self.MplWidget.canvas.axes.set_ylabel('Y [Meters]')
@@ -24,6 +25,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.SliderOut.valueChanged.connect(self.value_changed)
         self.labelSliderIn.setText("t_begin: 0%")
         self.labelSliderOut.setText("t_end: 100%")
+        self.calibrated_data = None
 
 
     def showDialog(self, MainWindow):
@@ -84,6 +86,43 @@ class MyWindow(QtWidgets.QMainWindow):
         red_patch = mpatches.Patch(color='green', label='Real Path')
         blue_patch = mpatches.Patch(color='blue', label='Sensor Data')
         self.MplWidget.canvas.axes.legend(handles=[red_patch, blue_patch])
+        self.MplWidget.canvas.draw()
+
+
+
+    def calibrate(self):
+
+        if not self.fileName:
+            self.statusbar.showMessage("Select rosbag file first")
+            return
+
+        #wheelbase_calibrate = 0.274
+        wheelbase_calibrate = float(self.wheelbase_cal_odom.value())
+        UMBmark_length = 3
+        number_poles = 2
+        motor_reduction = 4
+        wheel_radius = 0.043  # Meters
+        #dr_dl = 1.0
+        dr_dl = float(self.dl_dr_cal_odom.value())
+
+        topic_1 = self.comboBox_topic_1.currentText()
+        topic_2 = self.comboBox_topic_2.currentText()
+
+        slider_in = 1 - float(self.SliderIn.value())/100 #0.0
+        slider_out = float(self.SliderOut.value())/100 #0.3
+
+        speed_rpm, servo_angle_rad, timestamps, length = read_akermann_topics(self.bag, topic_1, topic_2,
+                                                                              wheel_radius, motor_reduction,
+                                                                              number_poles)
+        pos_x, pos_y, possible_curve_points_x, possible_curve_points_y, diff_th = odometry(slider_in, slider_out,
+                                                                                           speed_rpm, servo_angle_rad,
+                                                                                           timestamps, wheelbase_calibrate,dr_dl)
+
+        if self.calibrated_data is None:
+            self.calibrated_data = self.MplWidget.canvas.axes.plot(pos_x, pos_y, 'black')
+        else:
+            self.calibrated_data[0].set_ydata(pos_y)
+
         self.MplWidget.canvas.draw()
 
 
